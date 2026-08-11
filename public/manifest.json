@@ -1,0 +1,8 @@
+{
+  "name": "Phone Business Manager",
+  "short_name": "Phone Biz",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb"
+}
