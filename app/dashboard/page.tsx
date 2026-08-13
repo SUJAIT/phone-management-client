@@ -269,19 +269,37 @@ export default function DashboardPage() {
                   </CardContent>
                 </Card>
               </Link>
-              <Link href="/long-time-unsold">
-                <Card className="text-center hover:shadow-md transition-shadow">
-                  <CardContent className="p-5">
-                    <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">
-                      {stats.longTimeUnsoldQuantity}
-                    </p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Long Time Unsold</p>
-                    {/* <p className="text-xs text-slate-400 mt-0.5">
-                      avg {stats.longTimeUnsoldAvgDays}d
-                    </p> */}
-                  </CardContent>
-                </Card>
-              </Link>
+    <Link href="/long-time-unsold" className="col-span-2 sm:col-span-1">
+  <Card className="text-center hover:shadow-md transition-shadow">
+    <CardContent className="p-5">
+      <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">
+        {stats.longTimeUnsoldQuantity}
+      </p>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Long Time Unsold</p>
+    </CardContent>
+  </Card>
+</Link>
+
+{/* <Link href="/losses">
+  <Card className="text-center hover:shadow-md transition-shadow">
+    <CardContent className="p-5">
+      <p
+        className={`text-3xl font-bold ${
+          stats.totalLoss > 0
+            ? "text-orange-600 dark:text-orange-400"
+            : "text-slate-900 dark:text-white"
+        }`}
+      >
+        {money(stats.totalLoss)}
+      </p>
+
+      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        Total Loss
+      </p>
+    </CardContent>
+  </Card>
+</Link> */}
+
             </div>
           </>
         )}
