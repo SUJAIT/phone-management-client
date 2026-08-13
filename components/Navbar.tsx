@@ -49,18 +49,18 @@ export default function Navbar() {
         <NavLink href="/phones/sold" onClick={() => setOpen(false)}>
           Sold
         </NavLink>
-        <NavLink href="/phones/issues" onClick={() => setOpen(false)}>
+        {/* <NavLink href="/phones/issues" onClick={() => setOpen(false)}>
           Issue
-        </NavLink>
-        <NavLink href="/long-time-unsold" onClick={() => setOpen(false)}>
+        </NavLink> */}
+        {/* <NavLink href="/long-time-unsold" onClick={() => setOpen(false)}>
           Long Time Unsold
-        </NavLink>
+        </NavLink> */}
         <NavLink href="/losses" onClick={() => setOpen(false)}>
           Total Loss
         </NavLink>
-        <NavLink href="/investments" onClick={() => setOpen(false)}>
+        {/* <NavLink href="/investments" onClick={() => setOpen(false)}>
           Investment
-        </NavLink>
+        </NavLink> */}
         <NavLink href="/expenses" onClick={() => setOpen(false)}>
           My Expenses
         </NavLink>

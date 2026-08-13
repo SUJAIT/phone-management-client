@@ -181,12 +181,12 @@ export default function DashboardPage() {
                 value={money(stats.monthlyPurchaseTotal)}
                 href="/phones/buying/month"
               />
-              <StatCard
+              {/* <StatCard
                 label="Total Loss"
                 value={money(stats.totalLoss)}
                 tone={stats.totalLoss > 0 ? "warn" : "default"}
                 href="/losses"
-              />
+              /> */}
             </div>
 
             {/* Total Profit — click to withdraw */}
@@ -276,9 +276,9 @@ export default function DashboardPage() {
                       {stats.longTimeUnsoldQuantity}
                     </p>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Long Time Unsold</p>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    {/* <p className="text-xs text-slate-400 mt-0.5">
                       avg {stats.longTimeUnsoldAvgDays}d
-                    </p>
+                    </p> */}
                   </CardContent>
                 </Card>
               </Link>
@@ -334,7 +334,7 @@ export default function DashboardPage() {
                 <label className="label">Note *</label>
                 <Input
                   required
-                  placeholder="e.g. Bought a power bank"
+                  placeholder="e.g. withdraw for personal use"
                   value={expenseNote}
                   onChange={(e) => setExpenseNote(e.target.value)}
                 />
