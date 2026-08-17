@@ -1,3 +1,6 @@
+
+
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -45,7 +48,7 @@ export default function AllPhonesPage() {
         ) : phones.length === 0 ? (
           <p className="text-slate-500 dark:text-slate-400">No phones added yet.</p>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {phones.map((p) => {
               // "Hide from shop" is an owner-only action on your OWN phones -- Ovi and
               // Sujait can each see the other's phones here, but must not be able to
@@ -55,14 +58,19 @@ export default function AllPhonesPage() {
               return (
                 <PhoneCard key={p._id} phone={p} ownerActions onChanged={load}>
                   {canManage && (
-                    <Button onClick={() => toggleHide(p._id, p.hidden)} variant="secondary" size="sm" className="w-full">
+                    <Button
+                      onClick={() => toggleHide(p._id, p.hidden)}
+                      variant="secondary"
+                      size="sm"
+                      className="w-full text-xs sm:text-sm px-2 h-auto py-1.5 whitespace-normal text-center leading-tight"
+                    >
                       {p.hidden ? (
                         <>
-                          <Eye className="h-4 w-4" /> Unhide (show to shop)
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /> Unhide (show to shop)
                         </>
                       ) : (
                         <>
-                          <EyeOff className="h-4 w-4" /> Hide from shop
+                          <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /> Hide from shop
                         </>
                       )}
                     </Button>
