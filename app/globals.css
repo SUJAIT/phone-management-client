@@ -39,3 +39,45 @@ body {
 .label {
   @apply block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300;
 }
+
+/* The invoice previously relied on the system UI font (e.g. Segoe UI on Windows), whose
+   lowercase "l" is drawn with a small disambiguating foot/tail that Chrome's print/PDF
+   export can render as visibly thicker than on screen. Embedding a real, static webfont
+   (Roboto, imported in layout.tsx) sidesteps system font substitution entirely -- Chrome
+   embeds the exact same font file into the printed PDF that's shown on screen, so the two
+   are always pixel-identical, "l" included. */
+.invoice-sheet,
+.invoice-sheet * {
+  font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+  font-variation-settings: normal !important;
+  font-synthesis: none !important;
+  font-optical-sizing: none !important;
+  font-feature-settings: "kern" 1, "liga" 0, "calt" 0 !important;
+}
+
+/* Invoice print sheet -- shows only the invoice itself, no app chrome, no shadows/margins. */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  html,
+  body {
+    background: #ffffff !important;
+  }
+  /* Force the browser to actually print background colors (dark header bar, total box,
+     etc.) instead of silently dropping them to plain black-on-white text. */
+  .invoice-sheet,
+  .invoice-sheet * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .invoice-sheet {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+  @page {
+    margin: 12mm;
+  }
+}
