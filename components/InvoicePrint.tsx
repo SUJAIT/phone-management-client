@@ -168,7 +168,7 @@ import { money, formatDate } from "@/lib/utils";
 
 const WARRANTY_NOTE =
   "7 Days Replacement Warranty and 20 Days Service Warranty. Any physical damage, overcharging, electrical issues, dust, or water damage are not covered.";
-const TERMS_NOTE = "Any physical damage, overcharging, electrical issues, dust, or water damage are not covered.";
+const TERMS_NOTE = "Any physical damage, overcharging, electrical issues, dust, or water damage will not be covered under the warranty.";
 
 function paymentInfoLines(phone: ShopPhoneView): string[] {
   const c = phone.customer;
@@ -296,7 +296,7 @@ export default function InvoicePrint({ phone }: { phone: ShopPhoneView }) {
 
       {/* Note */}
       <div className="mt-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Note</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Warranty:</p>
         <p className="text-xs text-slate-600 leading-relaxed">{WARRANTY_NOTE}</p>
       </div>
 
