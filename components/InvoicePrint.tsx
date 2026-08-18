@@ -167,8 +167,8 @@ import { ShopPhoneView } from "@/lib/types";
 import { money, formatDate } from "@/lib/utils";
 
 const WARRANTY_NOTE =
-  "7 Days Replacement Warranty and 20 Days Service Warranty. Any physical damage, overcharging, electrical issues, dust, or water damage are not covered.";
-const TERMS_NOTE = "Any physical damage, overcharging, electrical issues, dust, or water damage will not be covered under the warranty.";
+  "7 Days Replacement Warranty and 20 Days Service Warranty.";
+const TERMS_NOTE = "Any physical damage, overcharging, electrical issues, dust, or water damage will not be covered under the warranty !";
 
 function paymentInfoLines(phone: ShopPhoneView): string[] {
   const c = phone.customer;
