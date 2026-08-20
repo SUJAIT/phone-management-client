@@ -166,9 +166,12 @@
 import { ShopPhoneView } from "@/lib/types";
 import { money, formatDate } from "@/lib/utils";
 
-const WARRANTY_NOTE =
-  "7 Days Replacement Warranty and 20 Days Service Warranty.";
-const TERMS_NOTE = "Any physical damage, overcharging, electrical issues, dust, or water damage will not be covered under the warranty !";
+const WARRANTY_NOTES = [
+  "Use original charger/cable only — others may cause overheating or charging issues.",
+  "Keep phone away from water & dust to avoid camera or internal damage.",
+];
+
+const TERMS_NOTE ="Used phones, no warranty. Technical issues within Two days: repaired/replaced after inspection. Physical/electrical damage not covered.";
 
 function paymentInfoLines(phone: ShopPhoneView): string[] {
   const c = phone.customer;
@@ -296,9 +299,18 @@ export default function InvoicePrint({ phone }: { phone: ShopPhoneView }) {
 
       {/* Note */}
       {/* <div className="mt-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Warranty:</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Note:</p>
         <p className="text-xs text-slate-600 leading-relaxed">{WARRANTY_NOTE}</p>
       </div> */}
+
+      <div className="mt-6">
+  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Note:</p>
+  <ul className="text-xs text-slate-600 leading-relaxed space-y-0.5 list-disc pl-4">
+    {WARRANTY_NOTES.map((line, i) => (
+      <li key={i}>{line}</li>
+    ))}
+  </ul>
+</div>
 
       {/* Footer: Happy Shopping / Signature */}
       <div className="flex items-end justify-between mt-10 pt-6">
@@ -321,10 +333,10 @@ export default function InvoicePrint({ phone }: { phone: ShopPhoneView }) {
           <p className="font-semibold text-slate-800 mb-1">Payment Info</p>
           {payment.length > 0 ? payment.map((line, i) => <p key={i}>{line}</p>) : <p>&nbsp;</p>}
         </div>
-        {/* <div>
+        <div>
           <p className="font-semibold text-slate-800 mb-1">Terms &amp; Conditions</p>
           <p>{TERMS_NOTE}</p>
-        </div> */}
+        </div>
       </div>
     </div>
   );
