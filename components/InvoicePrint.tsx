@@ -295,10 +295,10 @@ export default function InvoicePrint({ phone }: { phone: ShopPhoneView }) {
       </div>
 
       {/* Note */}
-      <div className="mt-6">
+      {/* <div className="mt-6">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Warranty:</p>
         <p className="text-xs text-slate-600 leading-relaxed">{WARRANTY_NOTE}</p>
-      </div>
+      </div> */}
 
       {/* Footer: Happy Shopping / Signature */}
       <div className="flex items-end justify-between mt-10 pt-6">
@@ -321,10 +321,10 @@ export default function InvoicePrint({ phone }: { phone: ShopPhoneView }) {
           <p className="font-semibold text-slate-800 mb-1">Payment Info</p>
           {payment.length > 0 ? payment.map((line, i) => <p key={i}>{line}</p>) : <p>&nbsp;</p>}
         </div>
-        <div>
+        {/* <div>
           <p className="font-semibold text-slate-800 mb-1">Terms &amp; Conditions</p>
           <p>{TERMS_NOTE}</p>
-        </div>
+        </div> */}
       </div>
     </div>
   );
