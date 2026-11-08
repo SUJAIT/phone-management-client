@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { X, CheckCircle2, Clock, ScrollText, AlertTriangle } from "lucide-react";
+import { X, CheckCircle2, Clock, ScrollText, AlertTriangle, ChevronRight } from "lucide-react";
 import api from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import { useLiveRefresh } from "@/lib/realtime";
+import PaymentPhoneDetail, { PhonePaySummary } from "@/components/PaymentPhoneDetail";
 import { StatementResponse, StatementPhoneRow, StatementEntryRow } from "@/lib/types";
 
 type View = "unpaid" | "paid" | "statement";
@@ -42,6 +43,9 @@ export default function PaymentStatementModal({
   const [data, setData] = useState<StatementResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selected, setSelected] = useState<PhonePaySummary | null>(null);
+  // shop holder passes ownerId; a reseller never does (they only ever see their own data)
+  const isShop = !!ownerId;
 
   const load = useCallback(() => {
     setLoading(true);
@@ -98,6 +102,7 @@ export default function PaymentStatementModal({
         </div>
 
         {/* tabs */}
+        {!selected && (
         <div className="flex gap-1 px-4 pt-3">
           {TABS.map(({ id, label, icon: Icon }) => {
             const count = data ? (id === "unpaid" ? data.counts.unpaid : id === "paid" ? data.counts.paid : data.counts.entries) : null;
@@ -118,6 +123,7 @@ export default function PaymentStatementModal({
             );
           })}
         </div>
+        )}
 
         {data && !data.reconciled && (
           <div className="mx-4 mt-3 flex items-start gap-2 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-xs p-2.5">
@@ -133,6 +139,8 @@ export default function PaymentStatementModal({
 
         {/* body */}
         <div className="flex-1 overflow-y-auto px-4 py-3 min-h-[200px]">
+          {selected && <PaymentPhoneDetail summary={selected} isShop={isShop} onBack={() => setSelected(null)} />}
+          {!selected && (<>
           {error && <div className="bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-sm rounded-xl p-3">{error}</div>}
           {loading && !data && <p className="text-sm text-slate-500 text-center py-10">Loading...</p>}
 
@@ -145,29 +153,48 @@ export default function PaymentStatementModal({
           {data && view !== "statement" && (
             <div className="space-y-2">
               {(data.items as StatementPhoneRow[]).map((p) => (
-                <div key={p._id} className="rounded-xl border border-slate-200 dark:border-slate-800 p-3 flex items-center justify-between gap-3">
+                <button
+                  key={p._id}
+                  type="button"
+                  onClick={() =>
+                    setSelected({
+                      id: p._id,
+                      name: p.name,
+                      imei: p.imei,
+                      state: p.state,
+                      owed: p.owed,
+                      paidAmount: p.paidAmount,
+                      unpaidAmount: p.unpaidAmount,
+                    })
+                  }
+                  className="w-full text-left rounded-xl border border-slate-200 dark:border-slate-800 p-3 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                >
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate">{p.name}</p>
+                    {p.imei && <p className="text-xs text-slate-500 dark:text-slate-400">IMEI {p.imei}</p>}
                     <p className="text-xs text-slate-500 dark:text-slate-400">
                       Sold {formatDate(p.soldAt)} &middot; for {fmt(p.soldPrice)}
                     </p>
                   </div>
-                  <div className="text-right shrink-0">
-                    {p.state === "paid" ? (
-                      <>
-                        <p className="font-bold text-sm text-emerald-600 dark:text-emerald-400">{fmt(p.owed)}</p>
-                        <p className="text-[11px] text-emerald-600 dark:text-emerald-400">Paid</p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="font-bold text-sm text-amber-600 dark:text-amber-400">{fmt(p.unpaidAmount)}</p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          {p.state === "partial" ? `${fmt(p.paidAmount)} paid of ${fmt(p.owed)}` : "Unpaid"}
-                        </p>
-                      </>
-                    )}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="text-right">
+                      {p.state === "paid" ? (
+                        <>
+                          <p className="font-bold text-sm text-emerald-600 dark:text-emerald-400">{fmt(p.owed)}</p>
+                          <p className="text-[11px] text-emerald-600 dark:text-emerald-400">Paid</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="font-bold text-sm text-amber-600 dark:text-amber-400">{fmt(p.unpaidAmount)}</p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                            {p.state === "partial" ? `${fmt(p.paidAmount)} paid of ${fmt(p.owed)}` : "Unpaid"}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-400" />
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -181,31 +208,50 @@ export default function PaymentStatementModal({
                 <span className="text-right hidden sm:block">Paid −</span>
                 <span className="text-right col-span-2 sm:col-span-1">Balance</span>
               </div>
-              {(data.items as StatementEntryRow[]).map((e) => (
-                <div
-                  key={`${e.type}-${e.id}`}
-                  className="grid grid-cols-[1fr_auto] sm:grid-cols-[110px_1fr_90px_90px_100px] gap-x-3 px-3 py-2 text-sm border-t border-slate-100 dark:border-slate-800 items-center"
-                >
-                  <span className="hidden sm:block text-xs text-slate-500">{formatDate(e.date).split(",").slice(0, 2).join(",")}</span>
-                  <span className="min-w-0">
-                    <span className="block truncate">{e.description}</span>
-                    <span className="sm:hidden block text-[11px] text-slate-500">
-                      {formatDate(e.date)} &middot;{" "}
-                      {e.debit > 0 ? <span className="text-red-500">+{fmt(e.debit)}</span> : <span className="text-emerald-600">−{fmt(e.credit)}</span>}
+              {(data.items as StatementEntryRow[]).map((e) => {
+                const clickable = e.type === "phone";
+                const open = () =>
+                  clickable &&
+                  setSelected({
+                    id: e.id,
+                    name: e.name || e.description,
+                    imei: e.imei,
+                    state: e.state,
+                    owed: e.owed,
+                    paidAmount: e.paidAmount,
+                    unpaidAmount: e.unpaidAmount,
+                  });
+                return (
+                  <div
+                    key={`${e.type}-${e.id}`}
+                    onClick={open}
+                    className={`grid grid-cols-[1fr_auto] sm:grid-cols-[110px_1fr_90px_90px_100px] gap-x-3 px-3 py-2 text-sm border-t border-slate-100 dark:border-slate-800 items-center ${
+                      clickable ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60" : ""
+                    }`}
+                  >
+                    <span className="hidden sm:block text-xs text-slate-500">{formatDate(e.date).split(",").slice(0, 2).join(",")}</span>
+                    <span className="min-w-0">
+                      <span className="block truncate">{e.description}</span>
+                      {e.imei && <span className="block text-[11px] text-slate-500">IMEI {e.imei}</span>}
+                      <span className="sm:hidden block text-[11px] text-slate-500">
+                        {formatDate(e.date)} &middot;{" "}
+                        {e.debit > 0 ? <span className="text-red-500">+{fmt(e.debit)}</span> : <span className="text-emerald-600">−{fmt(e.credit)}</span>}
+                      </span>
                     </span>
-                  </span>
-                  <span className="hidden sm:block text-right text-red-500">{e.debit > 0 ? `+${fmt(e.debit)}` : ""}</span>
-                  <span className="hidden sm:block text-right text-emerald-600 dark:text-emerald-400">{e.credit > 0 ? `−${fmt(e.credit)}` : ""}</span>
-                  <span className="text-right font-semibold">{fmt(e.balance)}</span>
-                </div>
-              ))}
+                    <span className="hidden sm:block text-right text-red-500">{e.debit > 0 ? `+${fmt(e.debit)}` : ""}</span>
+                    <span className="hidden sm:block text-right text-emerald-600 dark:text-emerald-400">{e.credit > 0 ? `−${fmt(e.credit)}` : ""}</span>
+                    <span className="text-right font-semibold">{fmt(e.balance)}</span>
+                  </div>
+                );
+              })}
             </div>
           )}
+          </>)}
         </div>
 
         {/* footer */}
         <div className="px-4 pb-4 pt-1">
-          {data && data.pages > 1 && (
+          {!selected && data && data.pages > 1 && (
             <div className="flex items-center justify-between mb-2 text-sm">
               <button
                 disabled={page <= 1 || loading}
@@ -227,8 +273,7 @@ export default function PaymentStatementModal({
             </div>
           )}
           <p className="text-[11px] text-slate-400 leading-snug">
-            Payments are recorded as one total, so they are matched to the oldest sold phones first (like a bank statement). The
-            totals above are exact and always equal the dashboard.
+            Payments are recorded as one total .
           </p>
         </div>
       </div>

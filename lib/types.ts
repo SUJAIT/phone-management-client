@@ -392,6 +392,7 @@ export interface LedgerEntry {
 export interface StatementPhoneRow {
   _id: string;
   name: string;
+  imei?: string;
   soldAt: string;
   soldPrice: number;
   owed: number;
@@ -404,6 +405,12 @@ export interface StatementEntryRow {
   id: string;
   date: string;
   description: string;
+  name?: string;
+  imei?: string;
+  state?: "paid" | "partial" | "unpaid";
+  owed?: number;
+  paidAmount?: number;
+  unpaidAmount?: number;
   debit: number;
   credit: number;
   balance: number;
