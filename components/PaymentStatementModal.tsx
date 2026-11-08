@@ -5,7 +5,7 @@ import { X, CheckCircle2, Clock, ScrollText, AlertTriangle, ChevronRight } from 
 import api from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import { useLiveRefresh } from "@/lib/realtime";
-import PaymentPhoneDetail, { PhonePaySummary } from "@/components/PaymentPhoneDetail";
+import PaymentPhoneDetail, { PhonePaySummary, CopyImeiButton } from "@/components/PaymentPhoneDetail";
 import { StatementResponse, StatementPhoneRow, StatementEntryRow } from "@/lib/types";
 
 type View = "unpaid" | "paid" | "statement";
@@ -153,9 +153,16 @@ export default function PaymentStatementModal({
           {data && view !== "statement" && (
             <div className="space-y-2">
               {(data.items as StatementPhoneRow[]).map((p) => (
-                <button
+                <div
                   key={p._id}
-                  type="button"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                      e.preventDefault();
+                      (e.currentTarget as HTMLElement).click();
+                    }
+                  }}
                   onClick={() =>
                     setSelected({
                       id: p._id,
@@ -167,11 +174,15 @@ export default function PaymentStatementModal({
                       unpaidAmount: p.unpaidAmount,
                     })
                   }
-                  className="w-full text-left rounded-xl border border-slate-200 dark:border-slate-800 p-3 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                  className="w-full text-left cursor-pointer rounded-xl border border-slate-200 dark:border-slate-800 p-3 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                 >
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate">{p.name}</p>
-                    {p.imei && <p className="text-xs text-slate-500 dark:text-slate-400">IMEI {p.imei}</p>}
+                    {p.imei && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                        IMEI {p.imei} <CopyImeiButton imei={p.imei} />
+                      </p>
+                    )}
                     <p className="text-xs text-slate-500 dark:text-slate-400">
                       Sold {formatDate(p.soldAt)} &middot; for {fmt(p.soldPrice)}
                     </p>
@@ -194,7 +205,7 @@ export default function PaymentStatementModal({
                     </div>
                     <ChevronRight className="h-4 w-4 text-slate-400" />
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           )}
@@ -232,7 +243,11 @@ export default function PaymentStatementModal({
                     <span className="hidden sm:block text-xs text-slate-500">{formatDate(e.date).split(",").slice(0, 2).join(",")}</span>
                     <span className="min-w-0">
                       <span className="block truncate">{e.description}</span>
-                      {e.imei && <span className="block text-[11px] text-slate-500">IMEI {e.imei}</span>}
+                      {e.imei && (
+                        <span className="flex items-center gap-2 text-[11px] text-slate-500">
+                          IMEI {e.imei} <CopyImeiButton imei={e.imei} />
+                        </span>
+                      )}
                       <span className="sm:hidden block text-[11px] text-slate-500">
                         {formatDate(e.date)} &middot;{" "}
                         {e.debit > 0 ? <span className="text-red-500">+{fmt(e.debit)}</span> : <span className="text-emerald-600">−{fmt(e.credit)}</span>}
@@ -273,7 +288,8 @@ export default function PaymentStatementModal({
             </div>
           )}
           <p className="text-[11px] text-slate-400 leading-snug">
-            Payments are recorded as one total .
+            Payments are recorded as one total, so they are matched to the oldest sold phones first (like a bank statement). The
+            totals above are exact and always equal the dashboard.
           </p>
         </div>
       </div>

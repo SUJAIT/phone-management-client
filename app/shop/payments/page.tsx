@@ -107,7 +107,7 @@ export default function ShopPaymentHistoryPage() {
       <main className="max-w-3xl mx-auto px-4 py-6 pb-12">
         <h1 className="text-xl font-bold mb-1">Paid Money History</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-          Every payment, from every reseller, color-coded so it's easy to tell whose is whose.
+          Every payment, from every reseller.
         </p>
 
         {loading ? (

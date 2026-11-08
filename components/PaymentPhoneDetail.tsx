@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Copy, Check } from "lucide-react";
 import api from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import PhoneDetailContent from "@/components/PhoneDetailContent";
@@ -11,6 +11,52 @@ const fmt = (n?: number) => {
   const v = Math.round((n ?? 0) * 100) / 100;
   return `\u09F3${v.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 };
+
+
+/** Small "copy IMEI" button. Safe to place inside a clickable card (it does not open the card). */
+export function CopyImeiButton({ imei }: { imei: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy(e: React.SyntheticEvent) {
+    e.stopPropagation();
+    e.preventDefault();
+    try {
+      await navigator.clipboard.writeText(imei);
+    } catch {
+      // fallback for browsers / http pages without clipboard access
+      const ta = document.createElement("textarea");
+      ta.value = imei;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand("copy");
+      } catch {}
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      onKeyDown={(e) => e.stopPropagation()}
+      title="Copy IMEI"
+      aria-label="Copy IMEI"
+      className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium align-middle transition-colors ${
+        copied
+          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+          : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+      }`}
+    >
+      {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
+}
 
 export interface PhonePaySummary {
   id: string;
@@ -60,7 +106,11 @@ export default function PaymentPhoneDetail({
       </button>
 
       <h4 className="font-semibold text-base mb-1">{summary.name}</h4>
-      {summary.imei && <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">IMEI {summary.imei}</p>}
+      {summary.imei && (
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+          IMEI {summary.imei} <CopyImeiButton imei={summary.imei} />
+        </p>
+      )}
 
       {/* payment status for this phone (from the oldest-first statement) */}
       {summary.owed != null && (
@@ -120,7 +170,7 @@ export default function PaymentPhoneDetail({
             )}
             <span className="text-slate-500">Status</span>
             <span className="text-right font-medium capitalize">{shopPhone.status}</span>
-            <span className="text-slate-500">Buying Price</span>
+            <span className="text-slate-500">Handover Price</span>
             <span className="text-right font-medium">{fmt(shopPhone.handoverPrice)}</span>
             <span className="text-slate-500">Sale Expectation</span>
             <span className="text-right font-medium">{shopPhone.sellExpectation}</span>
@@ -138,7 +188,7 @@ export default function PaymentPhoneDetail({
 
           {shopPhone.isLossSale && (
             <div className="bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300 rounded-xl p-3">
-              Sold below the Buying Price — recorded as a loss.
+              Sold below the handover price — recorded as a loss.
             </div>
           )}
 

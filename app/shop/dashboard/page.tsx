@@ -218,10 +218,10 @@ export default function ShopDashboardPage() {
                     </div>
                     <div>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                        Final Buying Price — Unsold Phone Total
+                       Unsold Phone Total
                       </p>
                       <p className="text-xl font-bold">{money(stats.finalBuyingPriceUnsoldTotal)}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">across both owners &middot; tap for details</p>
+                      <p className="text-xs text-slate-400 mt-0.5">Tap for More details</p>
                     </div>
                   </CardContent>
                 </Card>
