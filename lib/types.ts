@@ -387,3 +387,35 @@ export interface LedgerEntry {
   createdAt: string;
 }
 
+
+// ---- Paid / Unpaid phone statement (read-only view) ----
+export interface StatementPhoneRow {
+  _id: string;
+  name: string;
+  soldAt: string;
+  soldPrice: number;
+  owed: number;
+  paidAmount: number;
+  unpaidAmount: number;
+  state: "paid" | "partial" | "unpaid";
+}
+export interface StatementEntryRow {
+  type: "phone" | "payment";
+  id: string;
+  date: string;
+  description: string;
+  debit: number;
+  credit: number;
+  balance: number;
+}
+export interface StatementResponse {
+  view: "unpaid" | "paid" | "statement";
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
+  items: any[];
+  totals: { totalOwed: number; totalPaid: number; unpaid: number; surplus: number };
+  counts: { paid: number; unpaid: number; partial: number; entries: number };
+  reconciled: boolean;
+}

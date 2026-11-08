@@ -15,7 +15,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Modal from "@/components/Modal";
-import { Wallet, Clock, Wallet2 } from "lucide-react";
+import PaymentStatementModal from "@/components/PaymentStatementModal";
+import { CheckCircle2, Wallet, Clock, Wallet2, Globe, Copy, Check, ExternalLink, MessageCircle } from "lucide-react";
 
 function StatCard({ label, amount, count, href }: { label: string; amount: number; count: number; href: string }) {
   return (
@@ -31,8 +32,64 @@ function StatCard({ label, amount, count, href }: { label: string; amount: numbe
   );
 }
 
+
+// Public customer storefront link (no login needed to open it)
+function PublicStoreLinkCard() {
+  const [copied, setCopied] = useState(false);
+  const [url, setUrl] = useState("/store");
+  useEffect(() => setUrl(`${window.location.origin}/store`), []);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = url;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    successToast("Link copied");
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <Card className="mb-4 border-emerald-200 dark:border-emerald-900">
+      <CardContent className="p-5 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-300 shrink-0">
+            <Globe className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-slate-500 dark:text-slate-400">Public Store Link — customers can open it without login</p>
+            <p className="font-semibold text-sm truncate">{url}</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" size="sm" onClick={copy}>
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? "Copied" : "Copy link"}
+          </Button>
+          <a href={url} target="_blank" rel="noopener noreferrer">
+            <Button variant="secondary" size="sm" type="button">
+              <ExternalLink className="h-4 w-4" /> Open
+            </Button>
+          </a>
+          <a href={`https://wa.me/?text=${encodeURIComponent(`Check our phones: ${url}`)}`} target="_blank" rel="noopener noreferrer">
+            <Button variant="secondary" size="sm" type="button">
+              <MessageCircle className="h-4 w-4" /> Share
+            </Button>
+          </a>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function ShopDashboardPage() {
   const [stats, setStats] = useState<ShopDashboardStats | null>(null);
+  const [stmt, setStmt] = useState<{ ownerId: string; name: string; view: "unpaid" | "paid" } | null>(null);
   const [unpaid, setUnpaid] = useState<{ ownerId: string; name: string; unpaid: number; totalOwed: number; totalPaid: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -149,6 +206,8 @@ export default function ShopDashboardPage() {
               </Link>
             </div>
 
+            <PublicStoreLinkCard />
+
             {/* Final Buying Price Unsold Phone Total + Long Time Unsold Phone */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <Link href="/shop">
@@ -223,7 +282,7 @@ export default function ShopDashboardPage() {
                 const c = ownerColor(o.ownerId);
                 return (
                   <Card key={o.ownerId} className={`border-l-4 ${c.leftBorder}`}>
-                    <CardContent className="p-5 flex items-center justify-between gap-4">
+                    <CardContent className="p-5 flex flex-col gap-4">
                       <div className="flex items-center gap-3">
                         <div className={`h-10 w-10 rounded-full ${c.bg} ${c.text} flex items-center justify-center font-semibold`}>
                           {o.name.slice(0, 1).toUpperCase()}
@@ -240,11 +299,28 @@ export default function ShopDashboardPage() {
                       >
                         Paid — minus
                       </Button> */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button variant="secondary" size="sm" onClick={() => setStmt({ ownerId: o.ownerId, name: o.name, view: "paid" })}>
+                          <CheckCircle2 className="h-4 w-4" /> Paid Phones
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={() => setStmt({ ownerId: o.ownerId, name: o.name, view: "unpaid" })}>
+                          <Clock className="h-4 w-4" /> Unpaid Phones
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 );
               })}
             </div>
+
+            {stmt && (
+              <PaymentStatementModal
+                ownerId={stmt.ownerId}
+                name={stmt.name}
+                initialView={stmt.view}
+                onClose={() => setStmt(null)}
+              />
+            )}
 
             <h2 className="font-semibold mb-3">Recent Issue / Bad Review</h2>
             {stats.recentIssues.length === 0 ? (

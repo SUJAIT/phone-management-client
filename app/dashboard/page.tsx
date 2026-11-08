@@ -13,6 +13,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Modal from "@/components/Modal";
+import HoldToConfirmButton from "@/components/HoldToConfirmButton";
+import PaymentStatementModal from "@/components/PaymentStatementModal";
 import { PageLoader } from "@/components/Loader";
 import { Plus, Wallet, Minus } from "lucide-react";
 
@@ -52,6 +54,7 @@ function StatCard({
 export default function DashboardPage() {
   const [stats, setStats] = useState<OwnerDashboardStats | null>(null);
   const [unpaid, setUnpaid] = useState<UnpaidSummary | null>(null);
+  const [stmtView, setStmtView] = useState<"unpaid" | "paid" | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [payOpen, setPayOpen] = useState(false);
@@ -78,12 +81,36 @@ export default function DashboardPage() {
   useEffect(load, []);
   useLiveRefresh(["phones", "investments", "payments", "ledger"], load);
 
-  async function submitPayment(e: React.FormEvent) {
-    e.preventDefault();
+  const maxPayable = Math.max(0, unpaid?.unpaid ?? 0);
+  const payNum = Number(payAmount);
+  const payValid = payAmount !== "" && Number.isFinite(payNum) && payNum > 0 && payNum <= maxPayable;
+
+  function openPayModal() {
+    setPayAmount("");
+    setPayNote("");
+    setPayError("");
+    setPayOpen(true);
+  }
+
+  // Never let the typed value go above the unpaid balance (or below 0).
+  function onPayAmountChange(v: string) {
+    setPayError("");
+    if (v === "") return setPayAmount("");
+    const n = Number(v);
+    if (!Number.isFinite(n) || n < 0) return;
+    setPayAmount(n > maxPayable ? String(maxPayable) : v);
+  }
+
+  async function submitPayment() {
+    if (paySaving) return;
+    if (!payValid) {
+      setPayError(`Enter an amount between 1 and ${maxPayable}`);
+      return;
+    }
     setPayError("");
     setPaySaving(true);
     try {
-      await api.post("/shop-payments/mine", { amount: Number(payAmount), note: payNote });
+      await api.post("/shop-payments/mine", { amount: payNum, note: payNote });
       setPayOpen(false);
       setPayAmount("");
       setPayNote("");
@@ -92,6 +119,7 @@ export default function DashboardPage() {
     } catch (err: any) {
       const msg = err?.response?.data?.message || "Could not save payment";
       setPayError(msg);
+      load(); // balance may have changed — refresh the limit
     } finally {
       setPaySaving(false);
     }
@@ -228,11 +256,20 @@ export default function DashboardPage() {
                     </p>
                   </div>
                 </div>
-                <Button variant="secondary" onClick={() => setPayOpen(true)}>
-                  I received money — minus it
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="secondary" onClick={() => setStmtView("paid")}>
+                    Paid Phones
+                  </Button>
+                  <Button variant="secondary" onClick={() => setStmtView("unpaid")}>
+                    Unpaid Phones
+                  </Button>
+                  <Button variant="secondary" onClick={openPayModal}>
+                    I received money — minus it
+                  </Button>
+                </div>
               </CardContent>
             </Card>
+            {stmtView && <PaymentStatementModal name="Shop Telecom" initialView={stmtView} onClose={() => setStmtView(null)} />}
 
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mt-6">
               <Link href="/phones/all">
@@ -305,27 +342,69 @@ export default function DashboardPage() {
         )}
 
         {payOpen && (
-          <Modal title="Record money received from shop" onClose={() => setPayOpen(false)}>
-            <form onSubmit={submitPayment} className="space-y-4">
-              {payError && <div className="bg-red-50 text-red-600 text-sm rounded-xl p-3">{payError}</div>}
-              <div>
-                <label className="label">Amount received (Taka) *</label>
-                <Input
-                  type="number"
-                  required
-                  min={0}
-                  autoFocus
-                  value={payAmount}
-                  onChange={(e) => setPayAmount(e.target.value)}
-                />
+          <Modal title="Record money received from shop" onClose={() => !paySaving && setPayOpen(false)}>
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+              {payError && <div className="bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-sm rounded-xl p-3">{payError}</div>}
+
+              <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900 p-3 text-sm flex items-center justify-between">
+                <span className="text-slate-600 dark:text-slate-300">Shop unpaid (max you can minus)</span>
+                <span className="font-bold text-amber-600 dark:text-amber-400">{money(maxPayable)}</span>
               </div>
-              <div>
-                <label className="label">Note</label>
-                <Input value={payNote} onChange={(e) => setPayNote(e.target.value)} placeholder="Optional" />
-              </div>
-              <Button type="submit" disabled={paySaving} className="w-full">
-                {paySaving ? "Saving..." : "Confirm & minus from unpaid"}
-              </Button>
+
+              {maxPayable <= 0 ? (
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Nothing is unpaid right now, so there is no amount to minus.
+                </p>
+              ) : (
+                <>
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <label className="label">Amount received (Taka) *</label>
+                      <button
+                        type="button"
+                        onClick={() => onPayAmountChange(String(maxPayable))}
+                        className="text-xs text-brand-600 dark:text-brand-400 underline mb-1"
+                      >
+                        Full {money(maxPayable)}
+                      </button>
+                    </div>
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      min={1}
+                      max={maxPayable}
+                      autoFocus
+                      value={payAmount}
+                      onChange={(e) => onPayAmountChange(e.target.value)}
+                      placeholder={`1 - ${maxPayable}`}
+                    />
+                    <p className="text-xs text-slate-400 mt-1">
+                      Cannot be more than {money(maxPayable)}. After this the unpaid will be{" "}
+                      <span className="font-medium text-slate-600 dark:text-slate-300">
+                        {money(payValid ? maxPayable - payNum : maxPayable)}
+                      </span>
+                      .
+                    </p>
+                  </div>
+                  <div>
+                    <label className="label">Note</label>
+                    <Input value={payNote} onChange={(e) => setPayNote(e.target.value)} placeholder="Optional (e.g. bKash TrxID)" />
+                  </div>
+                  <div>
+                    <HoldToConfirmButton
+                      label="Hold to confirm bKash / Send Money received"
+                      holdingLabel="Keep holding"
+                      doneLabel="Confirmed"
+                      disabled={!payValid}
+                      loading={paySaving}
+                      onComplete={submitPayment}
+                    />
+                    <p className="text-xs text-slate-400 mt-2 text-center">
+                      Press and hold until the bar is full. Only confirm after the bKash payment / send money is complete.
+                    </p>
+                  </div>
+                </>
+              )}
             </form>
           </Modal>
         )}
