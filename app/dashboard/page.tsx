@@ -392,7 +392,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <HoldToConfirmButton
-                      label="Hold to confirm bKash / Send Money received"
+                      label="Hold to confirm payment"
                       holdingLabel="Keep holding"
                       doneLabel="Confirmed"
                       disabled={!payValid}
@@ -400,7 +400,7 @@ export default function DashboardPage() {
                       onComplete={submitPayment}
                     />
                     <p className="text-xs text-slate-400 mt-2 text-center">
-                      Press and hold until the bar is full. Only confirm after the bKash payment / send money is complete.
+                      Press and hold until the bar is full. Only confirm after payment is complete.
                     </p>
                   </div>
                 </>
